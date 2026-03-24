@@ -8,10 +8,12 @@ Lofka implements enough of the Kafka wire protocol for standard .NET Kafka clien
 
 ## Features
 
-- **Kafka wire protocol** — binary-compatible with Confluent.Kafka / librdkafka
+- **Kafka wire protocol** — binary-compatible with Confluent.Kafka / librdkafka and Java Kafka clients
 - **Produce & consume** — including consumer groups with automatic partition assignment
 - **Topic management** — auto-create on first use, or create/delete via AdminClient
 - **Offset management** — commit and fetch consumer offsets
+- **Config management** — DescribeConfigs returns sensible defaults for topic and broker configs
+- **Request logging** — full visibility into every request/response with timestamps and client IDs
 - **Native AOT** — single binary, no .NET runtime required, instant startup
 - **In-memory storage** — zero disk I/O, zero configuration
 - **Dual-stack networking** — IPv4 and IPv6
@@ -30,6 +32,9 @@ Lofka implements enough of the Kafka wire protocol for standard .NET Kafka clien
 | OffsetCommit / OffsetFetch | Supported |
 | CreateTopics / DeleteTopics | Supported |
 | InitProducerId | Supported |
+| DescribeConfigs | Supported |
+| DescribeCluster | Supported |
+| ListGroups / DescribeGroups | Supported |
 | Transactions, ACLs, SASL/TLS | Not supported |
 
 ## Quick start

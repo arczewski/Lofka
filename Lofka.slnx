@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lofka.Server/Lofka.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lofka.Tests.Integration/Lofka.Tests.Integration.csproj" />
+    <Project Path="tests/Lofka.Tests.Unit/Lofka.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

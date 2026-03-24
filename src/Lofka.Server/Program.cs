@@ -1,3 +1,4 @@
+using Lofka.Server;
 using Lofka.Server.Configuration;
 using Lofka.Server.Network;
 
@@ -12,7 +13,6 @@ Console.CancelKeyPress += (_, e) =>
 };
 
 await server.StartAsync(cts.Token);
-Console.WriteLine($"Lofka listening on port {config.Port}");
 
 try
 {
@@ -22,4 +22,4 @@ catch (OperationCanceledException)
 {
 }
 
-Console.WriteLine("Lofka shutting down...");
+LofkaLogger.Info("Lofka shutting down...");

@@ -35,6 +35,8 @@ public sealed class RequestDispatcher
 
     public async Task<byte[]> DispatchAsync(RequestHeader header, ReadOnlyMemory<byte> body, CancellationToken ct)
     {
+        LofkaLogger.Request(header.ApiKey, header.ApiVersion, header.CorrelationId, header.ClientId);
+
         var writer = new BigEndianWriter(512);
 
         switch (header.ApiKey)
@@ -84,12 +86,18 @@ public sealed class RequestDispatcher
             case 22:
                 InitProducerIdHandler.Handle(header, body.Span, writer, _server);
                 break;
+            case 32:
+                DescribeConfigsHandler.Handle(header, body.Span, writer);
+                break;
             default:
+                LofkaLogger.Warn($"Unsupported API key {header.ApiKey} ({LofkaLogger.GetApiName(header.ApiKey)}) v{header.ApiVersion}");
                 WriteUnsupportedApiResponse(header, writer);
                 break;
         }
 
-        return writer.ToFramedBytes();
+        var response = writer.ToFramedBytes();
+        LofkaLogger.Response(header.ApiKey, header.CorrelationId, response.Length);
+        return response;
     }
 
     private static void WriteUnsupportedApiResponse(RequestHeader header, BigEndianWriter writer)

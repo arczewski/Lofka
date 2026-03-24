@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Net;
 using System.Net.Sockets;
 using Lofka.Server.Protocol;
 using Lofka.Server.Protocol.Headers;
@@ -9,15 +10,18 @@ public sealed class ClientConnection
 {
     private readonly TcpClient _client;
     private readonly RequestDispatcher _dispatcher;
+    private readonly string _remoteEndpoint;
 
     public ClientConnection(TcpClient client, RequestDispatcher dispatcher)
     {
         _client = client;
         _dispatcher = dispatcher;
+        _remoteEndpoint = client.Client.RemoteEndPoint?.ToString() ?? "unknown";
     }
 
     public async Task RunAsync(CancellationToken ct)
     {
+        LofkaLogger.Info($"Connection opened from {_remoteEndpoint}");
         try
         {
             var stream = _client.GetStream();
@@ -27,10 +31,10 @@ public sealed class ClientConnection
             {
                 // Read 4-byte frame size
                 int bytesRead = await ReadExactlyAsync(stream, sizeBuffer, 0, 4, ct);
-                if (bytesRead < 4) break; // Client disconnected
+                if (bytesRead < 4) break;
 
                 int frameSize = BinaryPrimitives.ReadInt32BigEndian(sizeBuffer);
-                if (frameSize <= 0 || frameSize > 100 * 1024 * 1024) break; // Sanity check
+                if (frameSize <= 0 || frameSize > 100 * 1024 * 1024) break;
 
                 // Read frame payload
                 var payload = new byte[frameSize];
@@ -49,18 +53,17 @@ public sealed class ClientConnection
         }
         catch (IOException)
         {
-            // Client disconnected
         }
         catch (OperationCanceledException)
         {
-            // Server shutting down
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Connection error: {ex}");
+            LofkaLogger.Error($"Connection {_remoteEndpoint}: {ex.Message}");
         }
         finally
         {
+            LofkaLogger.Info($"Connection closed from {_remoteEndpoint}");
             _client.Dispose();
         }
     }

@@ -81,4 +81,50 @@ public class ConsumerGroupTests : IAsyncLifetime
         // Should not throw
         consumer.Commit(result);
     }
+
+    [Fact]
+    public async Task ConsumerGroup_ResumeAfterCommit_SkipsAlreadyConsumed()
+    {
+        var pConfig = new ProducerConfig { BootstrapServers = _server.BootstrapServers };
+        using var producer = new ProducerBuilder<string, string>(pConfig).Build();
+
+        for (int i = 0; i < 3; i++)
+        {
+            await producer.ProduceAsync(new TopicPartition("resume-test", 0),
+                new Message<string, string> { Key = $"k-{i}", Value = $"v-{i}" });
+        }
+
+        var cConfig = new ConsumerConfig
+        {
+            BootstrapServers = _server.BootstrapServers,
+            GroupId = "resume-group",
+            AutoOffsetReset = AutoOffsetReset.Earliest,
+            EnableAutoCommit = false,
+        };
+
+        // First consumer: read 2 messages, commit
+        using (var consumer1 = new ConsumerBuilder<string, string>(cConfig).Build())
+        {
+            consumer1.Subscribe("resume-test");
+
+            ConsumeResult<string, string>? last = null;
+            for (int i = 0; i < 2; i++)
+            {
+                last = consumer1.Consume(TimeSpan.FromSeconds(10));
+                Assert.NotNull(last);
+            }
+            consumer1.Commit(last!);
+            consumer1.Close();
+        }
+
+        // Second consumer: same group, should get only the 3rd message
+        using (var consumer2 = new ConsumerBuilder<string, string>(cConfig).Build())
+        {
+            consumer2.Subscribe("resume-test");
+
+            var result = consumer2.Consume(TimeSpan.FromSeconds(15));
+            Assert.NotNull(result);
+            Assert.Equal("v-2", result.Message.Value);
+        }
+    }
 }

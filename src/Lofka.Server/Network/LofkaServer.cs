@@ -39,9 +39,11 @@ public sealed class LofkaServer : IDisposable
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _listener.Start();
 
-        // If port was 0, update config with the actual port
         if (_config.Port == 0)
             _config.Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
+
+        LofkaLogger.Info($"Lofka listening on port {_config.Port} (advertised as {_config.AdvertisedHost}:{_config.Port})");
+        LofkaLogger.Info($"Auto-create topics: {_config.AutoCreateTopics}, default partitions: {_config.DefaultPartitionCount}");
 
         _acceptTask = AcceptLoopAsync(_cts.Token);
         return Task.CompletedTask;

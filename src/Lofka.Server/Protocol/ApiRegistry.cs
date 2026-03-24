@@ -25,6 +25,7 @@ public static class ApiRegistry
         new(19, 0, 5,  5),   // CreateTopics (flexible since v5)
         new(20, 0, 4,  4),   // DeleteTopics (flexible since v4)
         new(22, 0, 2,  2),   // InitProducerId (flexible since v2, we cap at v2)
+        new(32, 0, 4,  4),   // DescribeConfigs (flexible since v4)
     ];
 
     /// <summary>Returns all supported API version ranges.</summary>

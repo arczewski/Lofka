@@ -84,4 +84,65 @@ public class ConsumeTests : IAsyncLifetime
             Assert.Equal($"v-{i}", messages[i].Message.Value);
         }
     }
+
+    [Fact]
+    public async Task Consumer_CanReadMessageWithHeaders()
+    {
+        var pConfig = new ProducerConfig { BootstrapServers = _server.BootstrapServers };
+        using var producer = new ProducerBuilder<string, string>(pConfig).Build();
+
+        var msg = new Message<string, string>
+        {
+            Key = "hk",
+            Value = "hv",
+            Headers = new Headers
+            {
+                { "trace-id", System.Text.Encoding.UTF8.GetBytes("xyz-789") },
+            }
+        };
+        await producer.ProduceAsync("header-consume-test", msg);
+
+        var cConfig = new ConsumerConfig
+        {
+            BootstrapServers = _server.BootstrapServers,
+            GroupId = "hdr-group",
+            AutoOffsetReset = AutoOffsetReset.Earliest,
+            EnableAutoCommit = false,
+        };
+        using var consumer = new ConsumerBuilder<string, string>(cConfig).Build();
+        consumer.Assign(new TopicPartitionOffset("header-consume-test", 0, Offset.Beginning));
+
+        var result = consumer.Consume(TimeSpan.FromSeconds(10));
+
+        Assert.NotNull(result);
+        Assert.Equal("hk", result.Message.Key);
+        Assert.Equal("hv", result.Message.Value);
+        Assert.Single(result.Message.Headers);
+        Assert.Equal("trace-id", result.Message.Headers[0].Key);
+        Assert.Equal("xyz-789", System.Text.Encoding.UTF8.GetString(result.Message.Headers[0].GetValueBytes()));
+    }
+
+    [Fact]
+    public async Task Consumer_ReceivesEmpty_WhenNoMessages()
+    {
+        var pConfig = new ProducerConfig { BootstrapServers = _server.BootstrapServers };
+        using var producer = new ProducerBuilder<string, string>(pConfig).Build();
+        // Create the topic via a produce
+        await producer.ProduceAsync("empty-consume-test",
+            new Message<string, string> { Key = "x", Value = "x" });
+
+        var cConfig = new ConsumerConfig
+        {
+            BootstrapServers = _server.BootstrapServers,
+            GroupId = "empty-group",
+            AutoOffsetReset = AutoOffsetReset.Latest,
+            EnableAutoCommit = false,
+        };
+        using var consumer = new ConsumerBuilder<string, string>(cConfig).Build();
+        consumer.Assign(new TopicPartitionOffset("empty-consume-test", 0, Offset.End));
+
+        // No new messages — should return null within timeout
+        var result = consumer.Consume(TimeSpan.FromSeconds(2));
+        Assert.Null(result);
+    }
 }

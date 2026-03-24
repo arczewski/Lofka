@@ -71,4 +71,41 @@ public class ProduceTests : IAsyncLifetime
         Assert.Equal("null-key-topic", result.Topic);
         Assert.True(result.Offset.Value >= 0);
     }
+
+    [Fact]
+    public async Task Producer_CanPublishWithHeaders()
+    {
+        var config = new ProducerConfig { BootstrapServers = _server.BootstrapServers };
+        using var producer = new ProducerBuilder<string, string>(config).Build();
+
+        var msg = new Message<string, string>
+        {
+            Key = "hdr-key",
+            Value = "hdr-value",
+            Headers = new Headers
+            {
+                { "trace-id", System.Text.Encoding.UTF8.GetBytes("abc-123") },
+                { "source", System.Text.Encoding.UTF8.GetBytes("test") },
+            }
+        };
+
+        var result = await producer.ProduceAsync("header-topic", msg);
+        Assert.True(result.Offset.Value >= 0);
+    }
+
+    [Fact]
+    public async Task Producer_SequentialOffsets_AreMonotonic()
+    {
+        var config = new ProducerConfig { BootstrapServers = _server.BootstrapServers };
+        using var producer = new ProducerBuilder<string, string>(config).Build();
+
+        long prevOffset = -1;
+        for (int i = 0; i < 5; i++)
+        {
+            var result = await producer.ProduceAsync("offset-test",
+                new Message<string, string> { Key = $"k{i}", Value = $"v{i}" });
+            Assert.True(result.Offset.Value > prevOffset);
+            prevOffset = result.Offset.Value;
+        }
+    }
 }

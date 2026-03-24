@@ -12,6 +12,22 @@ public sealed class ServerConfig
     {
         var config = new ServerConfig();
 
+        // Environment variables (lowest priority — args override)
+        if (Environment.GetEnvironmentVariable("LOFKA_ADVERTISED_HOST") is { Length: > 0 } envHost)
+            config.AdvertisedHost = envHost;
+        else
+            config.AdvertisedHost = Environment.MachineName; // container hostname by default
+
+        if (Environment.GetEnvironmentVariable("LOFKA_PORT") is { Length: > 0 } envPort)
+            config.Port = int.Parse(envPort);
+
+        if (Environment.GetEnvironmentVariable("LOFKA_PARTITIONS") is { Length: > 0 } envPart)
+            config.DefaultPartitionCount = int.Parse(envPart);
+
+        if (Environment.GetEnvironmentVariable("LOFKA_AUTO_CREATE_TOPICS") is "false" or "0")
+            config.AutoCreateTopics = false;
+
+        // CLI args (highest priority)
         for (int i = 0; i < args.Length; i++)
         {
             switch (args[i])

@@ -78,15 +78,35 @@ Console.WriteLine($"{result.Message.Key}: {result.Message.Value}");
 
 ## Configuration
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--port` | `9092` | Listen port |
-| `--host` | `localhost` | Advertised hostname |
-| `--partitions` | `1` | Default partition count for auto-created topics |
-| `--no-auto-create` | | Disable automatic topic creation |
+All settings can be set via environment variables or CLI flags. CLI flags take priority.
 
-```bash
-docker run -p 19092:19092 ghcr.io/arczewski/lofka:latest --port 19092 --partitions 3
+| Env Variable | CLI Flag | Default | Description |
+|-------------|----------|---------|-------------|
+| `LOFKA_ADVERTISED_HOST` | `--host` | container hostname | Hostname returned in Metadata responses — clients connect to this |
+| `LOFKA_PORT` | `--port` | `9092` | Listen port |
+| `LOFKA_PARTITIONS` | `--partitions` | `1` | Default partition count for auto-created topics |
+| `LOFKA_AUTO_CREATE_TOPICS=false` | `--no-auto-create` | `true` | Disable automatic topic creation |
+
+> **Docker networking tip:** By default, Lofka advertises the container hostname (e.g. `lofka`).
+> When running with Docker Compose, name your service `lofka` and other containers on the same
+> network will resolve it automatically. Override with `LOFKA_ADVERTISED_HOST` if needed.
+
+### Docker Compose example
+
+```yaml
+services:
+  lofka:
+    image: ghcr.io/arczewski/lofka:latest
+    ports:
+      - "9092:9092"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: lofka:9092
 ```
 
 ## Building

@@ -24,8 +24,11 @@ public static class ApiRegistry
         new(18, 0, 3,  3),   // ApiVersions (flexible since v3)
         new(19, 0, 5,  5),   // CreateTopics (flexible since v5)
         new(20, 0, 4,  4),   // DeleteTopics (flexible since v4)
+        new(15, 0, 5,  5),   // DescribeGroups (flexible since v5)
+        new(16, 0, 4,  4),   // ListGroups (flexible since v4)
         new(22, 0, 2,  2),   // InitProducerId (flexible since v2, we cap at v2)
         new(32, 0, 4,  4),   // DescribeConfigs (flexible since v4)
+        new(60, 0, 1,  0),   // DescribeCluster (flexible since v0)
     ];
 
     /// <summary>Returns all supported API version ranges.</summary>

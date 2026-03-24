@@ -18,8 +18,11 @@ public static class LofkaLogger
         [18] = "ApiVersions",
         [19] = "CreateTopics",
         [20] = "DeleteTopics",
+        [15] = "DescribeGroups",
+        [16] = "ListGroups",
         [22] = "InitProducerId",
         [32] = "DescribeConfigs",
+        [60] = "DescribeCluster",
     };
 
     public static string GetApiName(short apiKey)

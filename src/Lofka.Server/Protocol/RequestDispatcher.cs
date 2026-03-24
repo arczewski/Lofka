@@ -83,11 +83,20 @@ public sealed class RequestDispatcher
             case 20:
                 DeleteTopicsHandler.Handle(header, body.Span, writer, _topicStore);
                 break;
+            case 15:
+                DescribeGroupsHandler.Handle(header, body.Span, writer, _groupManager);
+                break;
+            case 16:
+                ListGroupsHandler.Handle(header, body.Span, writer, _groupManager);
+                break;
             case 22:
                 InitProducerIdHandler.Handle(header, body.Span, writer, _server);
                 break;
             case 32:
                 DescribeConfigsHandler.Handle(header, body.Span, writer);
+                break;
+            case 60:
+                DescribeClusterHandler.Handle(header, body.Span, writer, _config);
                 break;
             default:
                 LofkaLogger.Warn($"Unsupported API key {header.ApiKey} ({LofkaLogger.GetApiName(header.ApiKey)}) v{header.ApiVersion}");

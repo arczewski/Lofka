@@ -45,7 +45,17 @@ public sealed class ClientConnection
                 var (header, bodyOffset) = RequestHeader.Parse(payload);
 
                 // Dispatch and get response
-                var response = await _dispatcher.DispatchAsync(header, payload.AsMemory(bodyOffset), ct);
+                byte[] response;
+                try
+                {
+                    response = await _dispatcher.DispatchAsync(header, payload.AsMemory(bodyOffset), ct);
+                }
+                catch (Exception ex)
+                {
+                    LofkaLogger.Error($"Handler crashed for {LofkaLogger.GetApiName(header.ApiKey)} v{header.ApiVersion} corr={header.CorrelationId}: {ex.Message}");
+                    LofkaLogger.Error($"  Request body ({payload.Length - bodyOffset} bytes): {Convert.ToHexString(payload, bodyOffset, Math.Min(payload.Length - bodyOffset, 128))}");
+                    break;
+                }
 
                 // Write framed response
                 await stream.WriteAsync(response, ct);

@@ -1,10 +1,6 @@
 # Stage 1: Build with Native AOT
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-
-# Install Native AOT prerequisites
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    clang zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/*
+# The -aot variant includes clang and zlib — no apt-get needed
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble-aot AS build
 
 WORKDIR /src
 

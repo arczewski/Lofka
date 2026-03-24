@@ -1,5 +1,5 @@
 # Stage 1: Build with Native AOT
-FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 # Install Native AOT prerequisites
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -17,12 +17,11 @@ COPY src/ src/
 RUN dotnet publish src/Lofka.Server/Lofka.Server.csproj \
     -c Release \
     -r linux-x64 \
-    -o /app \
-    --no-restore
+    -o /app
 
 # Stage 2: Minimal runtime image
 # Native AOT needs no .NET runtime — just libc and libssl
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-preview-noble-chiseled AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-noble-chiseled AS runtime
 
 WORKDIR /app
 COPY --from=build /app/Lofka.Server .
